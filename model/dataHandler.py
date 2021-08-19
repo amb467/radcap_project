@@ -3,8 +3,9 @@ import torchvision.transforms as transforms
 import torch.utils.data as data
 import json
 import os
+import pickle
 from PIL import Image
-from build_vocab import Vocabulary
+from model.build_vocab import build_vocab, Vocabulary
 
 data_transform = transforms.Compose([
             transforms.RandomResizedCrop(224),
@@ -27,17 +28,9 @@ class VQGDataset(data.Dataset):
         """
 
         self.root = root
+        self.data_set = data_set
         self.vocab = vocab
         self.transform = transform
-
-        with open(data_set, 'r') as data_set:
-            data_set = json.load(data_set)
-
-        self.data_set = []
-        for question_list in data_set.values():
-            self.data_set.extend(question_list)
-
-        #print(self.data_set)
 
     def __getitem__(self, index):
         """Returns one data pair (image and question)."""
@@ -128,45 +121,49 @@ def collate_fn(data):
 
     return images, targets, lengths
 
-def get_loader(root, data_set, vocab, transform, batch_size, shuffle, num_workers):
+def get_loader(root, data_set, image_ids, transform, batch_size, shuffle, num_workers):
     """Returns torch.utils.data.DataLoader for custom Look Who's Talking dataset."""
 
     transform = data_transform if not transform else transform
+    data_set = [q_dict for q_dict_list in data_set.values() for q_dict in q_dict_list]
+    vocab = build_vocab(data_set)
     data_set = VQGDataset(root, data_set, vocab, transform)
+    
     data_loader = torch.utils.data.DataLoader(dataset=data_set,
                                               batch_size=batch_size,
                                               shuffle=shuffle,
                                               num_workers=num_workers,
                                               collate_fn=collate_fn)
-    return data_loader
+    return data_loader, vocab
 
 if __name__ == '__main__':
 
-    import argparse, pickle, random
+    import argparse
 
     parser = argparse.ArgumentParser(description='Test out data handler')
-    parser.add_argument('--data_set', type=str, help='The data set in JSON format')
-    parser.add_argument('--vocab', type=str, help='The pickled vocabulary object')
-    parser.add_argument('--root_dir', type=str, default='raw_images/', help='The directory with the image files')
+    parser.add_argument('--data_set_dir', type=str, default='data_sets/', help='The directory with data set and vocab files')
+    parser.add_argument('--root_dir', type=str, default='images/', help='The directory with the image files')
     args = parser.parse_args()
 
-    with open(args.vocab, 'rb') as vocab:
-        vocab = pickle.load(vocab)
+    labels = ['control', '40plus_dominated', 'black_dominated', 'female_dominated']
 
-    data_loader = get_loader(args.root_dir, args.data_set, vocab, None, 4, True, 2)
+    for label in labels:
+        data_set_file = os.path.join(args.data_set_dir, f'{label}.json')
+        vocab_file = os.path.join(args.data_set_dir, f'{label}.vocab.pkl')
+        data_loader = get_loader(args.root_dir, data_set_file, vocab_file, None, 4, True, 2)
     
-    i = 0
+        with open(vocab_file, 'rb') as vocab:
+            vocab = pickle.load(vocab)
+            
+        i = 0
     
-    for images, targets, lengths in data_loader:
-        i = i + 1
-        if i > 2:
-            break
+        for images, targets, lengths in data_loader:
+            i = i + 1
+            if i > 2:
+                break
         
-        print(f'Images: {images}')
+            print(f'Images: {images}')
         
-        targets = [vocab.idxs_to_sentence(target.tolist()) for target in targets]
-        print(f'Targets: {targets}')
-        print(f'Lengths: {lengths}')
-
-
-
+            targets = [vocab.idxs_to_sentence(target.tolist()) for target in targets]
+            print(f'Targets: {targets}')
+            print(f'Lengths: {lengths}')

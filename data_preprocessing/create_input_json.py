@@ -9,7 +9,6 @@
 """
 import copy, csv, glob, json, os, pickle, random
 from collections import defaultdict
-from build_vocab import build_vocab
 
 """
     This method inputs the directory where the image files are stored and returns a
@@ -154,22 +153,6 @@ def output_corpus(output_dir, corpus_name, dict_obj):
         json.dump(dict_obj, outfile, indent = 3)
 
 """
-    Build and output a Vocabulary object for the corpus
-"""
-def output_vocab(output_dir, corpus_name, dict_obj, threshold=3):
-
-    vocab = build_vocab(dict_obj, threshold)
-    
-    if not os.path.isdir(output_dir):
-        os.makedirs(output_dir)
-    
-    outfile = os.path.join(output_dir, f'{corpus_name}.vocab.pkl')
-    with open(outfile, 'wb') as outfile:
-        pickle.dump(vocab, outfile)
-    
-    return len(vocab)
-
-"""
     Get the minimum number of questions per image, the maximum number of questions per
     image, and the total number of questions in the corpus
 """
@@ -219,10 +202,9 @@ if __name__ == '__main__':
 
     for label, corpus in corpora.items():
         output_corpus(args.output_dir, label, corpus)
-        vocab_len = output_vocab(args.output_dir, label, corpus)
         min_qs, max_qs, total_qs = get_min_max_total(corpus)
         
-        print(f'Created corpus {label} with min number of questions {min_qs} and max number of questions {max_qs} and total questions {total_qs}.  Total vocabulary size: {vocab_len}')
+        print(f'Created corpus {label} with min number of questions {min_qs} and max number of questions {max_qs} and total questions {total_qs}.')
         
         if label in control_qs_included:
             print(f'Questions from control corpus: {control_qs_included[label]}')   

@@ -1,4 +1,3 @@
-import argparse
 import torch
 import torch.nn as nn
 import numpy as np
@@ -8,12 +7,13 @@ import pickle
 import random
 import copy
 import time
-from data_preprocessing.build_vocab import Vocabulary
-from model import EncoderCNN, DecoderRNN
+from model.build_vocab import Vocabulary
+from model.Model import EncoderCNN, DecoderRNN
 from model.dataHandler import get_loader
 from torch.nn.utils.rnn import pack_padded_sequence
 from torchvision import transforms
 from torch.optim import lr_scheduler
+from model.VQGKFold import *
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -22,6 +22,28 @@ def main(args):
     # Create model directory
     if not os.path.exists(args.model_path):
         os.makedirs(args.model_path)
+        
+    corpus = {}
+    for label in ['control', '40plus_dominated', 'black_dominated', 'female_dominated']:
+        corpus_file = os.path.join(args.data_set_dir, f'{label}.json')                  
+        with open(corpus_file, 'r') as corpus_file:
+            corpus[label] = json.load(corpus_file)
+    
+    vqgKFold = pickle.load(args.fold_file)
+    #image_ids = list(corpus['control'].keys())
+    #vqgKFold = VQGKFold(10, image_ids)
+    #pickle.dump(vqgKFold, args.fold_file)
+    
+    for i, ids in enumerate(iter(vqgKFold)):
+        for corpus_label, data_set in corpus.items():
+            data_loader = {}
+            vocab = {}
+            for j, split_label in enumerate(['train', 'val', 'test']):
+                data_loader[split_label], vocab[split_label] = get_loader(args.image_dir, data_set, ids[j], None, args.batch_size, True, args.num_workers)
+
+            
+    
+    """
 
     # Data augmentation and normalization for training
     # Just normalization for validation
@@ -42,8 +64,7 @@ def main(args):
         ]),
     }
 
-    # Split: val, train, test
-
+    """
 
     #COCO
     """
@@ -78,7 +99,7 @@ def main(args):
 
     #json.dump(test_imgs, open('wrist_test_data_only_fracture_mostly_without_checkup.json', 'w'))
 
-	"""
+    """
     #Image preprocessing, normalization for the pretrained resnet
     transform = transforms.Compose([
         transforms.RandomCrop(args.crop_size),
@@ -182,9 +203,9 @@ def main(args):
         print('Training complete in {:.0f}m {:.0f}s'.format(
             time_elapsed // 60, time_elapsed % 60))
         print('Lowest loss: {:4f}'.format(lowest_loss))
-    	"""
-
         """
+        
+    """
         for i, (images, captions, lengths) in enumerate(dataloaders['train']):
 
             # Set mini-batch dataset
@@ -213,9 +234,9 @@ def main(args):
                     args.model_path, 'decoder-{}-{}.ckpt'.format(epoch + 1, i + 1)))
                 torch.save(encoder.state_dict(), os.path.join(
                     args.model_path, 'encoder-{}-{}.ckpt'.format(epoch + 1, i + 1)))
-        """
+    """
 
-	"""
+    """
     # Save the model checkpoints
     torch.save(best_model_decoder_wts, os.path.join(
         args.model_path, 'decoder-{}-{}.ckpt'.format('Vinalys', 'wrist-end')))
@@ -225,14 +246,19 @@ def main(args):
 
 
 if __name__ == '__main__':
+    import argparse
+    
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='./saved_models/', help='path for saving trained models')
+    
+    parser.add_argument('--image_dir', type=str, default='./images/', help='directory for images')
+    parser.add_argument('--data_set_dir', type=str, default='./data_sets/', help='directory with json data sets')
+    parser.add_argument('--fold_file', type=argparse.FileType('rb'), default='./data_sets/folds.pkl', help='pickled data structure that keeps track of data folds')
+            
     parser.add_argument('--crop_size', type=int, default=224, help='size for randomly cropping images')
-    #parser.add_argument('--vocab_path', type=str, default='./data/vocab.pkl', help='path for vocabulary wrapper')
-    #parser.add_argument('--image_dir', type=str, default='./data/', help='directory for resized images')
-    #parser.add_argument('--caption_path', type=str, default='train_imgcap.json', help='path for train annotation json file')
     parser.add_argument('--log_step', type=int, default=10, help='step size for prining log info')
     parser.add_argument('--save_step', type=int, default=1000, help='step size for saving trained models')
+    parser.add_argument('--model_path', type=str, default='./saved_models/', help='path for saving trained models')
+
 
     # Model parameters
     parser.add_argument('--embed_size', type=int, default=256, help='dimension of word embedding vectors')

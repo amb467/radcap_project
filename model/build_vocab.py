@@ -38,11 +38,10 @@ class Vocabulary(object):
     def __len__(self):
         return len(self.word2idx)
 
-def build_vocab(json_file, count_thr):
+def build_vocab(data_set, count_thr=3):
 
     counts = defaultdict(int)
-    data_set = json.load(json_file)
-    questions = [q_dict['question'] for q_dict_list in data_set.values() for q_dict in q_dict_list]
+    questions = [item['question'] for item in data_set]
     
     for question in questions:
         tokens = Vocabulary.tokenize(question)
@@ -59,7 +58,7 @@ def build_vocab(json_file, count_thr):
     vocab.add_word('<unk>')
     vocab.add_word('.')
     # Add the words to the vocabulary.
-    for i, word in enumerate(words):
+    for word in words:
         vocab.add_word(word)
     return vocab
 

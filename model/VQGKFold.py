@@ -20,18 +20,15 @@ class VQGKFold():
         fold_list = [(i + fold) % len(self.folds) for i in range(len(self.folds))]
         test_set = self.folds[fold_list.pop()]
         val_set = self.folds[fold_list.pop()]
-        train_set = VQGKFold.flatten([self.folds[i] for i in fold_list])            
+        train_set = flatten([self.folds[i] for i in fold_list])            
         return train_set, val_set, test_set
     
     """
         Return a list of question objects corresponding to the image ids in the split
     """
     def get_data_for_split(image_ids, corpus):
-        return VQGKFold.flatten([corpus[image_id] for image_id in image_ids])
-        
-    def flatten(list_of_lists):
-        return [item for this_list in list_of_lists for item in this_list]
-                   
+        return flatten([corpus[image_id] for image_id in image_ids])
+                           
     def __iter__(self):
         self.current_fold = 0
         return self
@@ -43,3 +40,6 @@ class VQGKFold():
         train_set, val_set, test_set = self.get(self.current_fold)
         self.current_fold += 1      
         return train_set, val_set, test_set
+
+def flatten(list_of_lists):
+    return [item for this_list in list_of_lists for item in this_list]

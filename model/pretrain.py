@@ -1,7 +1,7 @@
 import os
 from train import get_json_corpus, get_vocab, get_models, train
 from VocabularyFromPreTrained import *
-from VQGKFold import VQGKFold.flatten as flatten
+from VQGKFold import flatten
 
 def main(args, config):
         

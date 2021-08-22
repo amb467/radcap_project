@@ -1,81 +1,4 @@
-import torch
-import torch.nn as nn
-import numpy as np
-import os
-import json
-import pickle
-import random
-import copy
-import time
-from model.Model import EncoderCNN, DecoderRNN
-from model.dataHandler import get_loader
-from torch.nn.utils.rnn import pack_padded_sequence
-from torch.optim import lr_scheduler
-from model.VQGKFold import *
-from model.VocabularyFromPreTrained import *
-
-# Device configuration
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-def train(epochs, data_loaders, vocab):
-
-    for epoch in range(epochs):
-        print(f'Epoch {epoch+1}/{epochs}')
-
-        for phase in ['train', 'val']:
-            print(f'Phase: {phase}')
-           
-            #if phase == 'train':
-                #encoder.train()  # Set model to training mode
-            #else:
-                #encoder.eval()  # Set model to evaluate mode
-
-            running_loss = 0.0
-
-            for images, targets, lengths in data_loaders[phase]:
-                targets = [vocab.idxs_to_sentence(target.tolist()) for target in targets]
-                print(f'Targets: {targets}')
-                print(f'Lengths: {lengths}')
-                break
-    
-    """
-                # Set mini-batch dataset
-                images = images.to(device)
-                captions = captions.to(device)
-                targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
-
-                # forward
-                # track history if only in train
-                with torch.set_grad_enabled(phase == 'train'):
-                    # Forward, backward and optimize
-                    features = encoder(images)
-                    outputs = decoder(features, captions, lengths)
-                    loss = criterion(outputs, targets)
-                    decoder.zero_grad()
-                    encoder.zero_grad()
-                    if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
-                        exp_lr_scheduler.step()
-                    
-                    # statistics
-                    running_loss += loss.item()*images.size(0)
-            
-            epoch_loss = running_loss / dataset_sizes[phase]
-
-            # deep copy the model
-            if phase == 'val' and epoch_loss < lowest_loss:
-                lowest_loss = epoch_loss
-                best_model_encoder_wts = copy.deepcopy(encoder.state_dict())
-                best_model_decoder_wts = copy.deepcopy(decoder.state_dict())
-                torch.save(best_model_encoder_wts, model_path_encoder)
-                torch.save(best_model_decoder_wts, model_path_decoder)
-                
-        time_elapsed = time.time() - since
-        print('Training complete in {:.0f}m {:.0f}s'.format(
-            time_elapsed // 60, time_elapsed % 60))
-        print('Lowest loss: {:4f}'.format(lowest_loss))
-    """
+from train import train
 
 def main(args):
     # Create model directory
@@ -129,7 +52,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
  
     # Arguments with no default
-    parser.add_argument('--corpus', type=str, help='which corpus JSON file to use')
+    parser.add_argument('--pretraining_corpus', type=str, help='which corpus JSON file to use')
+    parser.add_argument('--pretraining_validation', type=str, help='which corpus JSON file to use')
     parser.add_argument('--fold', type=int, help='The fold to use for the validation set')
     
     # Data loader parameters

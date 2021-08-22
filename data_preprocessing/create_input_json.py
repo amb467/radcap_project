@@ -20,8 +20,7 @@ def build_image_dictionary(image_dir):
     image_dict = {}
     
     for img_file in glob.iglob(os.path.join(image_dir, "*.jpg")):
-        img_file = os.path.basename(img_file)
-        img_id = int(img_file.split(".")[-2].split("_")[-1])
+        img_id, img_file = _parse_image_path(img_file)
         image_dict[img_id] = img_file
     
     return image_dict
@@ -53,20 +52,33 @@ def join_user_question_data(users, questions):
     image_id,image_url,questions,ratings
 """
 def generate_control_corpus(img_dict, vqg_dir):
-    _check_is_dir(vqg_dir)    
+    _check_is_dir(vqg_dir) 
     control_corpus = {}
     
     for vqg_file in glob.iglob(os.path.join(vqg_dir, "*.csv")):
-        for row in _read_csv(vqg_file, ['image_id', 'questions']):
-            img_id = int(row['image_id'])
-            if not img_id in img_dict:
-                continue
-            
-            questions = row['questions'].split('---')
-            control_corpus[img_id] = [{'question': question, 'image_path': img_dict[img_id]} for question in questions]
+        corpus = _read_vqg_corpus_file(vqg_file)
+        corpus = {corpus: corpus[img_id] for img_id in corpus.keys() if img_id in img_dict}
+        control_corpus.update(corpus)
     
     return control_corpus        
 
+"""
+    For pretraining, we need a selection of images that are not in the LWT corpus.
+    
+    This method will make two corpora of identical size - one to be used for pretraining
+    and the other to be used for validation of the pretrained models.
+"""
+def generate_pretraining_corpus(img_dict, vqg_dir, image_count):
+    vqg_file = list(glob.iglob(os.path.join(vqg_dir, "*.csv")))[0]
+    corpus = _read_vqg_corpus_file(vqg_file)
+    image_ids = [image_id for image_id in corpus.keys() if image_id not in img_dict]
+    random.shuffle(image_ids)
+    image_ids = image_ids[:(2*image_count)]
+    training_ids = set(image_ids [:image_count])
+    validation_ids = set(image_ids).difference(training_ids)
+    
+    return {img_id: corpus[img_id] for img_id in training_ids},  {img_id: corpus[img_id] for img_id in validation_ids}
+    
 """
     Filter out a corpus with only the specified demographic
 """
@@ -168,6 +180,14 @@ def _check_is_dir(dir_str):
         raise Exception(f'Not a directory: {dir_str}')
 
 """
+    Convert a VQG image path URL into just the file name and image id
+"""
+def _parse_image_path(img_path):
+        img_path = os.path.basename(img_path)
+        img_id = int(img_path.split(".")[-2].split("_")[-1])
+        return img_id, img_path
+        
+"""
     Open and read CSV file, return a list of dictionary items
 """
 def _read_csv(csv_file, header_list):
@@ -176,20 +196,38 @@ def _read_csv(csv_file, header_list):
         for row in csv.DictReader(csv_file):
             row_data.append(dict([(header, row[header]) for header in header_list]))
     return row_data
+    
+"""
+    Convert a VQG corpus file into a corpus dictionary
+"""
+def _read_vqg_corpus_file(vqg_file):  
+    corpus = {}
+    
+    for row in _read_csv(vqg_file, ['image_id', 'image_url', 'questions']):
+        img_id = int(row['image_id'])
+        _, img_file = _parse_image_path(row['image_url'])           
+        questions = row['questions'].split('---')
+        corpus[img_id] = [{'question': question, 'image_path': img_file} for question in questions]
+    
+    return corpus   
 
            
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Create data set JSON files for the Look Who\'s Talking Data Set')
-    parser.add_argument('--image_dir', type=str, default='../raw_images', help='The directory where the image data set is kept.  All images are assumed to be in the format "*_<image id>.jpg"')
-    parser.add_argument('--output_dir', type=str, default='data_sets', help='The directory where JSON data sets should be stored')  
+    parser.add_argument('--image_dir', type=str, default='../images', help='The directory where the image data set is kept.  All images are assumed to be in the format "*_<image id>.jpg"')
+    parser.add_argument('--output_dir', type=str, default='../data_sets', help='The directory where JSON data sets should be stored')  
     parser.add_argument('--vqg_dir', type=str, default='vqg_files', help='The directory with the VQG csv files') 
     parser.add_argument('--users', type=str, default='users.csv', help='The csv file with Prolific user information')
     parser.add_argument('--questions', type=str, default='questions.csv', help='The csv file with Prolific question information')
+    parser.add_argument('--pretraining_image_count', default=400, type=int, help='The number of images to select for ')
+  
     args = parser.parse_args()
     
     image_dict = build_image_dictionary(args.image_dir)
+    
+    """
     questions = join_user_question_data(args.users, args.questions)
     corpus_labels = {'black_dominated': 'IsBlack', 'female_dominated': 'IsFemale', '40plus_dominated': 'Is40Plus'}
     corpora = {}
@@ -208,3 +246,18 @@ if __name__ == '__main__':
         
         if label in control_qs_included:
             print(f'Questions from control corpus: {control_qs_included[label]}')   
+    """
+    
+    pretraining, validation = generate_pretraining_corpus(image_dict, args.vqg_dir, args.pretraining_image_count)
+    
+    image_count = len(pretraining.keys())
+    question_count = sum([len(q_list) for q_list in pretraining.values()])
+    output_corpus(args.output_dir, "pretraining", pretraining)
+    print(f'Created pretraining corpus with {image_count} images and {question_count} questions')
+    
+    image_count = len(validation.keys())
+    question_count = sum([len(q_list) for q_list in validation.values()])
+    output_corpus(args.output_dir, "pretraining_validation", validation)
+    print(f'Created pretraining valition corpus with {image_count} images and {question_count} questions')
+    
+    

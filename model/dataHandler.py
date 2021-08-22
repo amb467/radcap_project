@@ -5,7 +5,7 @@ import json
 import os
 import pickle
 from PIL import Image
-from model.build_vocab import build_vocab, Vocabulary
+from model.VocabularyFromPreTrained import *
 
 data_transform = transforms.Compose([
             transforms.RandomResizedCrop(224),
@@ -53,42 +53,6 @@ class VQGDataset(data.Dataset):
     def __len__(self):
         return len(self.data_set)
 
-
-def make_weights_for_balanced_classes(images, nclasses):
-    count = [0] * nclasses
-    for item in images:
-        count[item[1]] += 1
-    weight_per_class = [0.] * nclasses
-    N = float(sum(count))
-    for i in range(nclasses):
-        weight_per_class[i] = N/float(count[i])
-    weight = [0] * len(images)
-    for idx, val in enumerate(images):
-        weight[idx] = weight_per_class[val[1]]
-    return weight
-
-def make_weights_for_balanced_classes(json_imgs, nclasses):
-    count = [0] * nclasses
-    for item in json_imgs:
-        if item['fracture'] == str(1): #hard coded classes '0' and '1'
-            count[1] += 1
-        else:
-            count[0] += 1
-
-    weight_per_class = [0.] * nclasses
-    N = float(sum(count))
-    for i in range(nclasses):
-        weight_per_class[i] = N/float(count[i])
-    weight = [0] * len(json_imgs)
-
-    for idx, img in enumerate(json_imgs):
-        if img['fracture'] == 1:
-            weight[idx] = weight_per_class[1]
-        else:
-            weight[idx] = weight_per_class[0]
-    return weight
-
-
 def collate_fn(data):
     """Creates mini-batch tensors from the list of tuples (image, caption).
 
@@ -121,20 +85,17 @@ def collate_fn(data):
 
     return images, targets, lengths
 
-def get_loader(root, data_set, image_ids, transform, batch_size, shuffle, num_workers):
+def get_loader(root, data_set, vocab, transform, batch_size, shuffle, num_workers):
     """Returns torch.utils.data.DataLoader for custom Look Who's Talking dataset."""
 
     transform = data_transform if not transform else transform
-    data_set = [q_dict for q_dict_list in data_set.values() for q_dict in q_dict_list]
-    vocab = build_vocab(data_set)
     data_set = VQGDataset(root, data_set, vocab, transform)
-    
     data_loader = torch.utils.data.DataLoader(dataset=data_set,
                                               batch_size=batch_size,
                                               shuffle=shuffle,
                                               num_workers=num_workers,
                                               collate_fn=collate_fn)
-    return data_loader, vocab
+    return data_loader
 
 if __name__ == '__main__':
 

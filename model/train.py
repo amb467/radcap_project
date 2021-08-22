@@ -7,12 +7,12 @@ import pickle
 import random
 import copy
 import time
-from model.Model import EncoderCNN, DecoderRNN
-from model.dataHandler import get_loader
+from Model import EncoderCNN, DecoderRNN
+from dataHandler import get_loader
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.optim import lr_scheduler
-from model.VQGKFold import *
-from model.VocabularyFromPreTrained import *
+from VQGKFold import *
+from VocabularyFromPreTrained import *
 
 def train(data_sets, config, encoder = None, decoder = None):
     # Device configuration

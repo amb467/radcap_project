@@ -26,6 +26,14 @@ def build_image_dictionary(image_dir):
     return image_dict
 
 """
+    Get a list of all image ids in the LWT corpus
+"""    
+def get_image_list(corpus_file):
+    with open(corpus_file, 'r') as corpus_file:
+        corpus = json.load(corpus_file)
+    return list(corpus.keys())
+
+"""
     Join user and question data based on user id
 """
 def join_user_question_data(users, questions): 
@@ -68,10 +76,10 @@ def generate_control_corpus(img_dict, vqg_dir):
     This method will make two corpora of identical size - one to be used for pretraining
     and the other to be used for validation of the pretrained models.
 """
-def generate_pretraining_corpus(img_dict, vqg_dir, image_count):
-    vqg_file = list(glob.iglob(os.path.join(vqg_dir, "*.csv")))[0]
+def generate_pretraining_corpus(image_list, vqg_dir, image_count):
+    vqg_file = os.path.join(vqg_dir, "coco_train_all.csv")
     corpus = _read_vqg_corpus_file(vqg_file)
-    image_ids = [image_id for image_id in corpus.keys() if image_id not in img_dict]
+    image_ids = [image_id for image_id in corpus.keys() if image_id not in image_list]
     random.shuffle(image_ids)
     image_ids = image_ids[:(2*image_count)]
     training_ids = set(image_ids [:image_count])
@@ -216,18 +224,19 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Create data set JSON files for the Look Who\'s Talking Data Set')
-    parser.add_argument('--image_dir', type=str, default='../images', help='The directory where the image data set is kept.  All images are assumed to be in the format "*_<image id>.jpg"')
-    parser.add_argument('--output_dir', type=str, default='../data_sets', help='The directory where JSON data sets should be stored')  
-    parser.add_argument('--vqg_dir', type=str, default='vqg_files', help='The directory with the VQG csv files') 
-    parser.add_argument('--users', type=str, default='users.csv', help='The csv file with Prolific user information')
-    parser.add_argument('--questions', type=str, default='questions.csv', help='The csv file with Prolific question information')
+    parser.add_argument('--image_dir', type=str, default='./images', help='The directory where the image data set is kept.  All images are assumed to be in the format "*_<image id>.jpg"')
+    parser.add_argument('--output_dir', type=str, default='./data_sets', help='The directory where JSON data sets should be stored')  
+    parser.add_argument('--vqg_dir', type=str, default='./data_preprocessing/vqg_files', help='The directory with the VQG csv files') 
+    parser.add_argument('--users', type=str, default='./data_preprocessing/users.csv', help='The csv file with Prolific user information')
+    parser.add_argument('--questions', type=str, default='./data_preprocessing/questions.csv', help='The csv file with Prolific question information')
     parser.add_argument('--pretraining_image_count', default=400, type=int, help='The number of images to select for ')
   
     args = parser.parse_args()
-    
+
+    image_list = get_image_list(os.path.join(args.output_dir, 'control.json'))
+    """    
     image_dict = build_image_dictionary(args.image_dir)
     
-    """
     questions = join_user_question_data(args.users, args.questions)
     corpus_labels = {'black_dominated': 'IsBlack', 'female_dominated': 'IsFemale', '40plus_dominated': 'Is40Plus'}
     corpora = {}
@@ -248,7 +257,7 @@ if __name__ == '__main__':
             print(f'Questions from control corpus: {control_qs_included[label]}')   
     """
     
-    pretraining, validation = generate_pretraining_corpus(image_dict, args.vqg_dir, args.pretraining_image_count)
+    pretraining, validation = generate_pretraining_corpus(image_list, args.vqg_dir, args.pretraining_image_count)
     
     image_count = len(pretraining.keys())
     question_count = sum([len(q_list) for q_list in pretraining.values()])

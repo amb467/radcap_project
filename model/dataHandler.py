@@ -29,7 +29,6 @@ class VQGDataset(data.Dataset):
 
         self.root = root
         self.data_set = data_set
-        print(f'Data set: {data_set}')
         self.vocab = vocab
         self.transform = transform
         

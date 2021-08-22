@@ -126,7 +126,7 @@ def get_vocab(config):
 def get_models(config):
     vocab = get_vocab(config)
     encoder = EncoderCNN(vocab.embed_size)
-    decoder = DecoderRNN(vocab.embedding_layer, vocab.embed_size, int(config['Model']['hidden size']), len(vocab), int(config['Model']['num layers'])
+    decoder = DecoderRNN(vocab.embedding_layer, vocab.embed_size, int(config['Model']['hidden size']), len(vocab), int(config['Model']['num layers']))
     return encoder, decoder
     
 def main(args, config):

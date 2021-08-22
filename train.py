@@ -14,7 +14,7 @@ from torch.optim import lr_scheduler
 from model.VQGKFold import *
 from model.VocabularyFromPreTrained import *
 
-def train(data_sets, encoder, decoder, config):
+def train(data_sets, config, encoder = None, decoder = None):
     # Device configuration
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
@@ -28,6 +28,8 @@ def train(data_sets, encoder, decoder, config):
     data_loaders = {label: get_loader(config['Data']['image dir'], data_sets[label], vocab, None, int(config['Data']['batch size']), True, int(config['Data']['num workers'])) for label in ['train', 'val']}
     
     """
+    if encoder is None or decoder is None:
+        encoder, decoder = get_models(config)
     encoder = encoder.to(device)
     decoder = decoder.to(device)
     

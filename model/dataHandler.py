@@ -5,7 +5,7 @@ import json
 import os
 import pickle
 from PIL import Image
-from model.VocabularyFromPreTrained import *
+from VocabularyFromPreTrained import *
 
 data_transform = transforms.Compose([
             transforms.RandomResizedCrop(224),

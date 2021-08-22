@@ -3,14 +3,14 @@ from train import get_json_corpus, get_vocab, get_models, train
 
 def main(args, config):
         
-	training_corpus = get_json_corpus(config, os.path.joint(config['Data']['data set dir'], args.training_corpus))
-	validation_corpus = get_json_corpus(config, os.path.joint(config['Data']['data set dir'], args.validation_corpus))
-	
-	data_sets = {
-		'train': list(training_corpus.values()),
-		'val': list(validation_corpus.values())
-	}
-	
+    training_corpus = get_json_corpus(config, os.path.joint(config['Data']['data set dir'], args.training_corpus))
+    validation_corpus = get_json_corpus(config, os.path.joint(config['Data']['data set dir'], args.validation_corpus))
+    
+    data_sets = {
+        'train': list(training_corpus.values()),
+        'val': list(validation_corpus.values())
+    }
+    
     config['Model']['label'] = "pretraining"
     train(data_sets, config)
 

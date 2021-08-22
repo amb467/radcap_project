@@ -1,5 +1,6 @@
 import os
 from train import get_json_corpus, get_vocab, get_models, train
+from VocabularyFromPreTrained import *
 
 def main(args, config):
         

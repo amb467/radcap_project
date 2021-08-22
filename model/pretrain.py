@@ -15,7 +15,7 @@ def main(args, config):
     train(data_sets, config)
 
 if __name__ == '__main__':
-    import argparse
+    import argparse, configparser
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--training_corpus', type=str, default='pretraining.json', help='pretraining corpus')

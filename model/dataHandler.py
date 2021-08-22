@@ -29,9 +29,10 @@ class VQGDataset(data.Dataset):
 
         self.root = root
         self.data_set = data_set
+        print(f'Data set: {data_set}')
         self.vocab = vocab
         self.transform = transform
-    	
+        
     def __getitem__(self, index):
         """Returns one data pair (image and question)."""
 

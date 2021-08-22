@@ -27,7 +27,6 @@ def train(data_sets, config, encoder = None, decoder = None):
     
     data_loaders = {label: get_loader(config['Data']['image dir'], data_sets[label], vocab, None, int(config['Data']['batch size']), True, int(config['Data']['num workers'])) for label in ['train', 'val']}
     
-    """
     if encoder is None or decoder is None:
         encoder, decoder = get_models(config)
     encoder = encoder.to(device)
@@ -51,29 +50,29 @@ def train(data_sets, config, encoder = None, decoder = None):
     
     model_path_encoder = os.path.join(config['Model']['model path'], f"encoder_{config['Model']['label']}")
     model_path_decoder = os.path.join(config['Model']['model path'], f"decoder_{config['Model']['label']}")
-    """
-    epochs = int(config['Model']['num epochs'])
-    
+
+    epochs = int(config['Model']['num epochs'])  
     for epoch in range(epochs):
         print(f"Epoch {epoch+1}/{epochs}")
 
         for phase in ['train', 'val']:
             print(f'Phase: {phase}')
            
-            #if phase == 'train':
-                #encoder.train()  # Set model to training mode
-            #else:
-                #encoder.eval()  # Set model to evaluate mode
+            if phase == 'train':
+                encoder.train()  # Set model to training mode
+            else:
+                encoder.eval()  # Set model to evaluate mode
 
             running_loss = 0.0
 
             for images, targets, lengths in data_loaders[phase]:
+                """
                 targets = [vocab.idxs_to_sentence(target.tolist()) for target in targets]
                 print(f'Targets: {targets}')
                 print(f'Lengths: {lengths}')
-                break
-    
-    """
+                break    
+                """
+                
                 # Set mini-batch dataset
                 images = images.to(device)
                 captions = captions.to(device)
@@ -110,7 +109,6 @@ def train(data_sets, config, encoder = None, decoder = None):
         print('Training complete in {:.0f}m {:.0f}s'.format(
             time_elapsed // 60, time_elapsed % 60))
         print('Lowest loss: {:4f}'.format(lowest_loss))
-    """
 
 def get_json_corpus(config, corpus_file):
     corpus_file = os.path.join(config['Data']['data set dir'], corpus_file)                

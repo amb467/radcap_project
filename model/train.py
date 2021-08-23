@@ -28,7 +28,7 @@ def train(data_sets, config, encoder = None, decoder = None):
     data_loaders = {label: get_loader(config['Data']['image dir'], data_sets[label], vocab, None, int(config['Data']['batch size']), True, int(config['Data']['num workers'])) for label in ['train', 'val']}
     
     if encoder is None or decoder is None:
-        encoder, decoder = get_models(config)
+        encoder, decoder = get_models(config, vocab)
     encoder = encoder.to(device)
     decoder = decoder.to(device)
     
@@ -121,8 +121,9 @@ def get_vocab(config):
         vocab = pickle.load(vocab)
     return vocab
 
-def get_models(config):
-    vocab = get_vocab(config)
+def get_models(config, vocab=None):
+    if not vocab:
+        vocab = get_vocab(config)
     encoder = EncoderCNN(vocab.embed_size)
     decoder = DecoderRNN(vocab.embedding_layer, vocab.embed_size, int(config['Model']['hidden size']), len(vocab), int(config['Model']['num layers']))
     return encoder, decoder

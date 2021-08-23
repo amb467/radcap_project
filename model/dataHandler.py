@@ -7,13 +7,6 @@ import pickle
 from PIL import Image
 from VocabularyFromPreTrained import *
 
-data_transform = transforms.Compose([
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-
 class VQGDataset(data.Dataset):
     """Custom Dataset compatible with torch.utils.data.DataLoader."""
 
@@ -31,6 +24,14 @@ class VQGDataset(data.Dataset):
         self.data_set = data_set
         self.vocab = vocab
         self.transform = transform
+        
+        if not self.transform:
+            self.transform = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
         
     def __getitem__(self, index):
         """Returns one data pair (image and question)."""
@@ -88,7 +89,6 @@ def collate_fn(data):
 def get_loader(root, data_set, vocab, transform, batch_size, shuffle, num_workers):
     """Returns torch.utils.data.DataLoader for custom Look Who's Talking dataset."""
 
-    transform = data_transform if not transform else transform
     data_set = VQGDataset(root, data_set, vocab, transform)
     data_loader = torch.utils.data.DataLoader(dataset=data_set,
                                               batch_size=batch_size,

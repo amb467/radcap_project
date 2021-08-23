@@ -28,7 +28,7 @@ def generateCaption(image, vocab, encoder, decoder):
 
 def main(args, config):
 
-    test_corpus = get_json_corpus(config, os.path.join(config, args.test_corpus))
+    test_corpus = get_json_corpus(config, args.test_corpus)
     vocab = get_vocab(config)
     encoder, decoder = get_models(config, vocab)
     
@@ -52,11 +52,9 @@ if __name__ == '__main__':
     import argparse, configparser
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--encoder_path', type=str, default='./models/encoder-5-335.ckpt',
-                        help='path for trained encoder')
-    parser.add_argument('--decoder_path', type=str, default='./models/decoder-5-335.ckpt',
-                        help='path for trained decoder')
-    parser.add_argument('--test_corpus', type=str, default='./radcap_data.json', help='path for json file with test imgs')
+    parser.add_argument('--encoder_path', type=str, help='path for trained encoder')
+    parser.add_argument('--decoder_path', type=str, help='path for trained decoder')
+    parser.add_argument('--test_corpus', type=str, help='path for json file with test imgs')
     parser.add_argument('--config', type=str, default='./model/config.ini', help='The config file')
     args = parser.parse_args()
     

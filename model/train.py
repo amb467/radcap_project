@@ -65,25 +65,19 @@ def train(data_sets, config, encoder = None, decoder = None):
 
             running_loss = 0.0
 
-            for images, targets, lengths in data_loaders[phase]:
-                """
-                targets = [vocab.idxs_to_sentence(target.tolist()) for target in targets]
-                print(f'Targets: {targets}')
-                print(f'Lengths: {lengths}')
-                break    
-                """
+            for images, questions, lengths in data_loaders[phase]:
                 
                 # Set mini-batch dataset
                 images = images.to(device)
-                captions = captions.to(device)
-                targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
+                questions = questions.to(device)
+                targets = pack_padded_sequence(questions, lengths, batch_first=True)[0]
 
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     # Forward, backward and optimize
                     features = encoder(images)
-                    outputs = decoder(features, captions, lengths)
+                    outputs = decoder(features, questions, lengths)
                     loss = criterion(outputs, targets)
                     decoder.zero_grad()
                     encoder.zero_grad()

@@ -18,7 +18,7 @@ class VocabularyFromPreTrained():
             full_content = fi.read().strip().split('\n')
         for i in range(len(full_content)):
             i_word = full_content[i].split(' ')[0]
-            i_embeddings = [float(val) for val in full_content[i].split(' ')[1:]]
+            i_embeddings = [long(val) for val in full_content[i].split(' ')[1:]]
             
             if self.embed_size is None:
                 self.embed_size = len(i_embeddings)
@@ -38,7 +38,7 @@ class VocabularyFromPreTrained():
         self._add_word('<start>',2)
         self._add_word('<end>', 3)
         
-        self.embedding_layer = torch.nn.Embedding.from_pretrained(torch.from_numpy(self.embeddings).float())
+        self.embedding_layer = torch.nn.Embedding.from_pretrained(torch.from_numpy(self.embeddings))
         self.idx2word = dict(enumerate(self.vocab))
         self.word2idx = {self.idx2word[i]: i for i in self.idx2word}
         assert self.embedding_layer.weight.shape == self.embeddings.shape

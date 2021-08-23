@@ -18,7 +18,7 @@ class VocabularyFromPreTrained():
             full_content = fi.read().strip().split('\n')
         for i in range(len(full_content)):
             i_word = full_content[i].split(' ')[0]
-            i_embeddings = [long(val) for val in full_content[i].split(' ')[1:]]
+            i_embeddings = [int(val) for val in full_content[i].split(' ')[1:]]
             
             if self.embed_size is None:
                 self.embed_size = len(i_embeddings)

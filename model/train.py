@@ -51,7 +51,9 @@ def train(data_sets, config, encoder = None, decoder = None):
     model_path_encoder = os.path.join(config['Model']['model path'], f"encoder_{config['Model']['label']}")
     model_path_decoder = os.path.join(config['Model']['model path'], f"decoder_{config['Model']['label']}")
 
-    epochs = int(config['Model']['num epochs'])  
+    epochs = int(config['Model']['num epochs'])
+    dataset_sizes = {x: len(data_sets[x]) for x in ['train', 'val']}
+    
     for epoch in range(epochs):
         print(f"Epoch {epoch+1}/{epochs}")
 

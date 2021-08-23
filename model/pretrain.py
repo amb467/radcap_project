@@ -1,12 +1,12 @@
 import os
-from train import get_json_corpus, get_vocab, get_models, train
+from train import get_json_corpus, train
 from VocabularyFromPreTrained import *
 from VQGKFold import flatten
 
 def main(args, config):
         
-    training_corpus = get_json_corpus(config, os.path.join(config['Data']['data set dir'], args.training_corpus))
-    validation_corpus = get_json_corpus(config, os.path.join(config['Data']['data set dir'], args.validation_corpus))
+    training_corpus = get_json_corpus(config, args.training_corpus))
+    validation_corpus = get_json_corpus(config, args.validation_corpus))
     
     data_sets = {
         'train': flatten(list(training_corpus.values())),

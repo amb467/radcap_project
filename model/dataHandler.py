@@ -19,31 +19,15 @@ class VQGDataset(data.Dataset):
             vocab: Vocabulary object
             transform: image transformer
         """
-
         self.root = root
         self.data_set = data_set
         self.vocab = vocab
         self.transform = transform
-        
-        if not self.transform:
-            self.transform = transforms.Compose([
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-        
+                        
     def __getitem__(self, index):
         """Returns one data pair (image and question)."""
 
-        image = os.path.join(self.root, self.data_set[index]['image_path'])
-
-        if os.path.exists(image):
-            image = Image.open(image).convert('RGB')
-        else:
-            raise Exception(f'VQGDataset.__getitem__: no such image: {img_file_path}')
-
-        image = self.transform(image) if self.transform else image
+        image = VQGDataset.transform(self.root, self.data_set[index]['image_path'], self.transform)
 
         # Convert caption (string) to word ids
         target = self.data_set[index]['question']
@@ -54,6 +38,25 @@ class VQGDataset(data.Dataset):
     def __len__(self):
         return len(self.data_set)
 
+def image_transform(root_dir, image_path, transform=None):
+    image = os.path.join(root_dir, image_path)
+    
+    if os.path.exists(image):
+        image = Image.open(image).convert('RGB')
+    else:
+        raise Exception(f'VQGDataset.image_transform: no such image: {image}')
+    
+    if not transform:
+        transform = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    
+    image = transform(image)
+    return image
+    
 def collate_fn(data):
     """Creates mini-batch tensors from the list of tuples (image, caption).
 

@@ -229,7 +229,7 @@ if __name__ == '__main__':
     parser.add_argument('--vqg_dir', type=str, default='./data_preprocessing/vqg_files', help='The directory with the VQG csv files') 
     parser.add_argument('--users', type=str, default='./data_preprocessing/users.csv', help='The csv file with Prolific user information')
     parser.add_argument('--questions', type=str, default='./data_preprocessing/questions.csv', help='The csv file with Prolific question information')
-    parser.add_argument('--pretraining_image_count', default=1000, type=int, help='The number of images to select for ')
+    parser.add_argument('--pretraining_image_count', default=2000, type=int, help='The number of images to select for ')
   
     args = parser.parse_args()
 
@@ -267,6 +267,6 @@ if __name__ == '__main__':
     image_count = len(validation.keys())
     question_count = sum([len(q_list) for q_list in validation.values()])
     output_corpus(args.output_dir, "pretraining_validation", validation)
-    print(f'Created pretraining valition corpus with {image_count} images and {question_count} questions')
+    print(f'Created pretraining validation corpus with {image_count} images and {question_count} questions')
     
     
